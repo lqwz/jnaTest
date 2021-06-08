@@ -14,4 +14,8 @@ public interface User32 extends StdCallLibrary {
     void BlockInput(boolean isBlock);
 
     int MessageBoxA(int hWnd, String lpText, int lpCaption, int uType);
+
+    boolean SystemParametersInfoA(int uiAction, int uiParam, String fnm, int fWinIni);
+    boolean SystemParametersInfoW(int uiAction, int uiParam, String fnm, int fWinIni);
+
 }
