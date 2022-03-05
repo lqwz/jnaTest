@@ -8,9 +8,9 @@ package com.liqwer;
 public class BlockInput {
     public static void main(String[] args) throws InterruptedException {
         //阻塞鼠标键盘的输入
-        User32.INSTANCE.BlockInput(true);
+        User32Test.INSTANCE.BlockInput(true);
         Thread.sleep(20000);//间隔20秒
         //释放鼠标键盘
-        User32.INSTANCE.BlockInput(false);
+        User32Test.INSTANCE.BlockInput(false);
     }
 }

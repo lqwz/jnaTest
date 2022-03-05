@@ -5,9 +5,16 @@ import com.sun.jna.Pointer;
 import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinDef;
 import com.sun.jna.platform.win32.WinUser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static com.sun.jna.platform.win32.WinUser.WM_CLOSE;
@@ -17,9 +24,12 @@ import static com.sun.jna.platform.win32.WinUser.WM_CLOSE;
  */
 public class CloseWindowInteval {
     public static void main(String[] args) throws InterruptedException {
+        Logger logger = LoggerFactory.getLogger(CloseWindowInteval.class);
+
+        Set<String> strings = loadConfig();
+        logger.info("config => "+strings);
         final List<String> windowToClose = new ArrayList<>();
-        windowToClose.add("WinRAR@RarReminder"); // 压缩软件弹出的
-        windowToClose.add("@SoPY_Status");// 搜狗拼音输入法  关闭之后不影响使用 也还行
+        windowToClose.addAll(strings);
 
         final List<String> tagNew = new ArrayList<>();
         List<String> tagOld = new ArrayList<>();
@@ -53,12 +63,12 @@ public class CloseWindowInteval {
 
 
             if (news.size() > 0) {
-                System.out.println("open " + news);
+                logger.info("open " + news);
 
             }
             List removes = getDiff(tagOld, tagNew);
             if (removes.size() > 0) {
-                System.out.println("close " + removes);
+                logger.info("close " + removes);
             }
 
             tagOld.removeAll(tagOld);
@@ -72,7 +82,7 @@ public class CloseWindowInteval {
                 String tag = (String) o;
                 for (String theTitle : windowToClose) {
                     if (tag.indexOf(theTitle) >= 0) {
-                        System.out.println("auto close => " + tag);
+                        logger.info("auto close => " + tag);
                         String hwndHex = tag.split("@")[tag.split("@").length - 1].substring(2);
                         WinDef.HWND hWnd=new WinDef.HWND(new Pointer(Integer.parseInt(hwndHex,16)));
                         User32.INSTANCE.PostMessage(hWnd, WM_CLOSE, new WinDef.WPARAM(), new WinDef.LPARAM());
@@ -80,10 +90,37 @@ public class CloseWindowInteval {
                 }
             }
 
-            TimeUnit.SECONDS.sleep(1);
+            TimeUnit.MILLISECONDS.sleep(100);
         }
     }
 
+    /**
+     * 获取配置文件
+     * @return
+     */
+    private static Set<String> loadConfig() {
+        PropertyTest loadProp = new PropertyTest();
+        InputStreamReader in = null;
+        try {
+            in = new InputStreamReader( loadProp.getClass().getResourceAsStream("/windowToClose.properties"),"utf-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        Properties prop = new Properties();
+        try {
+            prop.load(in);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return prop.stringPropertyNames();
+    }
+
+    /**
+     * 比较两个表的差异
+     * @param a
+     * @param b
+     * @return
+     */
     public static List getDiff(List<String> a, List<String> b) {
         List re = new ArrayList();
         re.addAll(a);
